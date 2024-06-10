@@ -7,30 +7,27 @@ import pickle
 import numpy as np
 from utils import calculate_probability_sequence
 from tqdm import tqdm
+import yaml
 
 parser = argparse.ArgumentParser("Save generations")
-parser.add_argument("--model_dir", type=str, default="models", help="Directory of already cached model.")
-parser.add_argument("--checkpoint", type=str, default="opt-1.3B", help="Checkpoint of OPT model.")
-parser.add_argument("--max_output_length", type=int, default=32, help="Maximum number of new output tokens.")
-parser.add_argument("--temperatures", nargs="+", type=float, default=[0.25, 0.5, 1, 1.5],
-                    help="Temperatures used to generate answers in multinomial sampling.")
-parser.add_argument("--n_beams", nargs="+", type=int, default=[20],
-                    help="Number of beams used in multinomial beam sampling.")
-parser.add_argument("--n_samples", type=int, default=10, help="Number of samples per question to generate.")
 parser.add_argument("--specific_group", type=int, default=-1,
                     help="Only create pkl file for specific group (0 - 4). If not in range, for all.")
 parser.add_argument("--sampling_method", type=str, default="multinomial_sampling",
                     choices=["multinomial_sampling", "multinomial_beam_sampling"], help="Sampling method to use.")
 args = parser.parse_args()
 
-model_dir = args.model_dir
-checkpoint = args.checkpoint
-max_new_tokens = args.max_output_length
-temperatures = args.temperatures
-n_beams = args.n_beams
-n_samples_per_question = args.n_samples
+with open("config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
+model_dir = config["model_dir"]
+checkpoint = config["checkpoint"]
+max_new_tokens = config["max_output_length"]
+temperatures = config["temperatures"]
+n_beams = config["n_beams"]
+n_samples_per_question = config["n_generations_per_answer"]
 specific_group = args.specific_group
 sampling_method = args.sampling_method
+save_path = config["path_to_saved_generations"]
 
 
 def create_index_file():
@@ -38,13 +35,14 @@ def create_index_file():
     Creates index file
     :return: None
     """
-    if not os.path.exists("sampled_sequences/group_indices.txt"):
-        with open("sampled_sequences/group_indices.txt", "w") as f:
+    if not os.path.exists(os.path.join(save_path, "group_indices.txt")):
+        os.makedirs(save_path, exist_ok=True)
+        with open(os.path.join(save_path, "group_indices.txt"), "w") as f:
             for _ in range(5):
-                sampled_indices = np.random.randint(0, len(data_trivia_val), 500)
+                sampled_indices = np.random.choice(len(data_trivia_val), 1000, replace=False)
                 f.write(",".join([str(i) for i in sampled_indices]) + "\n")
     else:
-        print("Sampled indices file already exists.")
+        print("Sampled indices file already exists. Skipping...")
 
 
 def load_results(filepath):
@@ -87,13 +85,14 @@ tokenizer.eos_token_id = eos_token
 
 # Read indices
 create_index_file()
-with open("sampled_sequences/group_indices.txt", "r") as f:
+with open(os.path.join(save_path, "group_indices.txt"), "r") as f:
     indices_groups = [[int(i) for i in line.strip().split(",")] for line in f]
 
-for group in [specific_group] if 0 >= specific_group >= 4 else range(5):
+for group in [specific_group] if 0 <= specific_group <= 4 else range(5):
     print(f"Processing group {group}")
     indices_group = indices_groups[group]
-    file_path = os.path.join("sampled_sequences", sampling_method, f"group{group}.pkl")
+    os.makedirs(os.path.join(save_path, sampling_method), exist_ok=True)
+    file_path = os.path.join(save_path, sampling_method, f"group{group}.pkl")
     result = load_results(file_path)
 
     for i in tqdm(indices_group):
@@ -152,6 +151,7 @@ for group in [specific_group] if 0 >= specific_group >= 4 else range(5):
                                                  max_new_tokens=max_new_tokens,
                                                  eos_token_id=eos_token,
                                                  bad_words_ids=stop_tokens,
+                                                 no_repeat_ngram_size=3,
                                                  return_dict_in_generate=True,
                                                  output_scores=True,
                                                  do_sample=True,
