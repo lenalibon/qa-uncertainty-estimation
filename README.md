@@ -10,15 +10,15 @@ measures explored include:
 
 Files:
 
-- `generate_answers.ipynb:` Explore different prompts to generate answers and find the most suitable one. Also explore
-  different sampling techniques.
-- `save_generations.py:` Save generated answers (with additional information such as token length) for different
-  temperatures and sampling algorithms. These generated answers (saved as pickle files) are then used to
+- `generate_answers.ipynb:` Explore different prompts and sampling techniques to generate answers.
+- `save_generations.py:` Save generated answers along with additional information such as token length for different
+  temperatures and sampling algorithms. These answers (stored as pickle files) are later used to
   calculate the
-  diversity/uncertainty of answers.
-- `greedy_answers.ipynb:` Generate the greedy answer for each question and evaluate its correctness.
+  diversity/uncertainty.
+- `post_processing_answers.ipynb:` Post-process the generated pickle files for easier analysis.
+- `greedy_answers.ipynb:` Generate and evaluate the correctness of the greedy answers for each question.
 - `diviersity_answers.ipynb:` Calculate and analyse the diversity of generated answers.
-- `infer_answers.ipynb:` Create bins of semantically equivalent answers per question.
+- `infer_answers.ipynb:` Group semantically equivalent answers into bins for each question.
 - `evaulate_uncertainty.ipynb:` Calculate the different uncertainty measures and evaluate them using AUROC.
 - `utils.py:` Utility functions.
-- `config.yaml:` Configuration parameters
+- `config.yaml:` Configuration parameters.
