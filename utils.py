@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 
 def calculate_probability_sequence(model, tokenizer, output_generate, length_input, idx=0, beam_sampling=False,
@@ -39,3 +40,30 @@ def calculate_probability_sequence(model, tokenizer, output_generate, length_inp
             n_output_tokens += 1
 
     return prob_output, n_output_tokens
+
+
+def bidirectional_entailment(question, true_answer, generated_answer, model, tokenizer, device):
+    """
+    Tests whether bidirectional entailment Question True answer <=> Question Answer holds
+    :return: True for bidirectional entailment, False otherwise
+    """
+    true_answer = "Answer: " + true_answer
+    question = "Question: " + question
+    generated_answer = "Answer: " + generated_answer
+
+    # First direction
+    premise = question + " " + generated_answer
+    hypothesis = question + " " + true_answer
+    input = tokenizer(premise, hypothesis, return_tensors="pt")
+    output = model(input["input_ids"].to(device))
+    prediction = torch.argmax(output["logits"][0], dim=-1).item()  # 0: entail, 1: neutral, 2: contradiction
+
+    # Only if first direction entailment: look at second direction
+    if prediction == 0:
+        input = tokenizer(hypothesis, premise, return_tensors="pt")
+        output = model(input["input_ids"].to(device))
+        prediction = torch.argmax(output["logits"][0], dim=-1).item()
+        if prediction == 0:
+            return True
+
+    return False
