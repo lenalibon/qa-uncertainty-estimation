@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 
 
 def calculate_probability_sequence(model, tokenizer, output_generate, length_input, idx=0, beam_sampling=False,

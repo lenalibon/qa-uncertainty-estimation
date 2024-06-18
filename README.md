@@ -4,8 +4,9 @@ Evaluate different uncertainty measures in the context of free-form question ans
 on the work by Kuhn et al. ([2023](https://arxiv.org/pdf/2302.09664)). The
 measures explored include:
 
-- Number of semantically distinct answers
 - Predictive Entropy
+- Length-normalized Predictive Entropy
+- Number of semantically distinct answers
 - Semantic Entropy
 
 Files:
