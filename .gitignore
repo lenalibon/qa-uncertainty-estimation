@@ -3,4 +3,3 @@ models/
 sampled_sequences/
 sampled_sequences_backup/
 __pycache__/
-*.pkl
